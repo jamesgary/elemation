@@ -6,6 +6,8 @@ import Html.Events exposing (..)
 import Animation exposing (px)
 import Color
 import Time
+import Mouse
+import Json.Decode
 
 
 main : Program Never Model Msg
@@ -26,13 +28,12 @@ init : ( Model, Cmd Msg )
 init =
     ( { ball =
             Animation.styleWith
-                -- default easing is 0.2 seconds
-                (Animation.easing
-                    { duration = 0.2 * Time.second
-                    , ease = (\x -> x ^ 2)
+                (Animation.spring
+                    { stiffness = 200
+                    , damping = 15
                     }
                 )
-                [ Animation.backgroundColor (Color.blue)
+                [ Animation.translate (px 0) (px 0)
                 ]
       }
     , Cmd.none
@@ -45,46 +46,19 @@ subscriptions model =
 
 
 type Msg
-    = MouseEnter
-    | MouseLeave
+    = MouseMove Mouse.Position
     | Animate Animation.Msg
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     case action of
-        MouseEnter ->
-            -- use default easing of 0.2 seconds
+        MouseMove pos ->
             ( { model
                 | ball =
                     Animation.interrupt
                         [ Animation.to
-                            [ Animation.backgroundColor (Color.orange)
-                            ]
-                        ]
-                        model.ball
-              }
-            , Cmd.none
-            )
-
-        MouseLeave ->
-            -- use new easing of 1 second
-            ( { model
-                | ball =
-                    --Animation.interrupt
-                    --    [ Animation.toWith
-                    --        (Animation.easing
-                    --            { duration = 1 * Time.second
-                    --            , ease = (\x -> x)
-                    --            }
-                    --        )
-                    --        [ Animation.backgroundColor (Color.blue)
-                    --        ]
-                    --    ]
-                    --    model.ball
-                    Animation.interrupt
-                        [ Animation.to
-                            [ Animation.backgroundColor (Color.blue)
+                            [ Animation.translate (px (toFloat pos.x)) (px (toFloat pos.y))
                             ]
                         ]
                         model.ball
@@ -99,17 +73,32 @@ update action model =
 view : Model -> Html Msg
 view model =
     div
-        (Animation.render model.ball
-            ++ [ onMouseEnter MouseEnter
-               , onMouseLeave MouseLeave
-               , style
-                    [ ( "width", "200px" )
-                    , ( "height", "200px" )
-                    , ( "border-radius", "100%" )
-                    , ( "margin", "200px auto" )
-                    , ( "cursor", "pointer" )
-                    , ( "text-align", "center" )
-                    ]
-               ]
-        )
-        []
+        [ onMouseMove
+        , style
+            [ ( "width", "100%" )
+            , ( "height", "100%" )
+            , ( "background", "#eff" )
+            ]
+        ]
+        [ div
+            (Animation.render model.ball
+                ++ [ style
+                        [ ( "width", "200px" )
+                        , ( "height", "200px" )
+                        , ( "border-radius", "100%" )
+                        , ( "cursor", "pointer" )
+                        , ( "text-align", "center" )
+                        , ( "background", "blue" )
+                        , ( "position", "absolute" )
+                        , ( "left", "-100px" )
+                        , ( "top", "-100px" )
+                        ]
+                   ]
+            )
+            []
+        ]
+
+
+onMouseMove : Attribute Msg
+onMouseMove =
+    on "mousemove" (Json.Decode.map MouseMove Mouse.position)
