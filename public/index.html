@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Elemation</title>
+    <link rel="stylesheet" type="text/css" href="./styles.css">
+  </head>
+  <body style="width: 100%; height: 100%">
+    <script src="./main.js"></script>
+    <script>
+      var flags;
+
+      try {
+        flags = JSON.parse(localStorage.getItem("flags"));
+      } catch(e) {
+        flags = {
+          stiffness: 200,
+          damping: 15,
+        };
+      };
+
+      var app = Elm.Main.fullscreen(flags);
+
+      app.ports.saveFlags.subscribe(function(flags) {
+        console.log(flags);
+        localStorage.setItem("flags", JSON.stringify(flags));
+      });
+    </script>
+  </body>
+</html>
