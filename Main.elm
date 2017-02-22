@@ -65,6 +65,7 @@ subscriptions model =
 
 type Msg
     = ChangeStiffness String
+    | ChangeDamping String
     | MouseMove Mouse.Position
     | Animate Animation.Msg
 
@@ -73,6 +74,10 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update action model =
     case action of
         MouseMove pos ->
+            --let
+            --    _ =
+            --        Debug.log "ball" model.ball
+            --in
             ( { model
                 | ball =
                     Animation.interrupt
@@ -89,7 +94,7 @@ update action model =
         ChangeStiffness valueStr ->
             let
                 newStiffness =
-                    Result.withDefault 20 (String.toFloat valueStr)
+                    Result.withDefault 400 (String.toFloat valueStr)
 
                 flags =
                     model.flags
@@ -97,8 +102,29 @@ update action model =
                 newFlags =
                     { flags | stiffness = newStiffness }
 
-                ball =
-                    model.ball
+                newBall =
+                    Animation.styleWith
+                        (Animation.spring newFlags)
+                        [ Animation.translate (px (toFloat model.dest.x)) (px (toFloat model.dest.y))
+                        ]
+            in
+                ( { model
+                    | flags = newFlags
+                    , ball = newBall
+                  }
+                , saveFlags newFlags
+                )
+
+        ChangeDamping valueStr ->
+            let
+                newDamping =
+                    Result.withDefault 23 (String.toFloat valueStr)
+
+                flags =
+                    model.flags
+
+                newFlags =
+                    { flags | damping = newDamping }
 
                 newBall =
                     Animation.styleWith
@@ -138,13 +164,28 @@ view model =
                     [ td [ class "config-table-term" ] [ text "Spring" ]
                     , td [ class "config-table-value" ] [ text (toString model.flags.stiffness) ]
                     , td
-                        [ class "config-list-input" ]
+                        [ class "config-table-input" ]
                         [ input
                             [ type_ "range"
                             , Html.Attributes.min "0"
-                            , Html.Attributes.max "500"
+                            , Html.Attributes.max "1000"
                             , onInput ChangeStiffness
                             , defaultValue (toString model.flags.stiffness)
+                            ]
+                            []
+                        ]
+                    ]
+                , tr []
+                    [ td [ class "config-table-term" ] [ text "Damping" ]
+                    , td [ class "config-table-value" ] [ text (toString model.flags.damping) ]
+                    , td
+                        [ class "config-table-input" ]
+                        [ input
+                            [ type_ "range"
+                            , Html.Attributes.min "0"
+                            , Html.Attributes.max "100"
+                            , onInput ChangeDamping
+                            , defaultValue (toString model.flags.damping)
                             ]
                             []
                         ]

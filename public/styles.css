@@ -3,6 +3,7 @@ html, body {
   height: 100%;
   margin: 0;
   padding: 0;
+  overflow: hidden;
 }
 
 .ball {
@@ -33,4 +34,12 @@ html, body {
 
 .config-table-value {
   min-width: 40px;
+}
+
+.config-table-input {
+  min-width: 200px;
+}
+
+.config-table-input input {
+  width: 100%;
 }
